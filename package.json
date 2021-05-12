@@ -1,0 +1,38 @@
+{
+  "name": "telegram-voiceflow-bot",
+  "version": "1.0.0",
+  "description": "Telegram Bot with Node.js using Voiceflow",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node index.ts"
+  },
+  "author": "Xavier Portilla Edo",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:xavidop/telegram-voiceflow-bot.git"
+  },
+  "homepage": "https://github.com/xavidop/telegram-voiceflow-bot.git",
+  "keywords": [
+    "nodejs",
+    "telegraf",
+    "bot",
+    "telegram",
+    "javascript"
+  ],
+  "prettier": "@voiceflow/prettier-config",
+  "dependencies": {
+    "@voiceflow/eslint-config": "^2.0.6",
+    "@voiceflow/runtime-client-js": "^1.14.1",
+    "dotenv": "^8.2.0",
+    "telegraf": "^4.0.0"
+  },
+  "devDependencies": {
+    "@voiceflow/prettier-config": "^1.0.5",
+    "eslint": "^7.20.0",
+    "prettier": "^2.2.1",
+    "typescript": "^4.1.5",
+    "ts-node": "^9.1.1"
+  }
+}
