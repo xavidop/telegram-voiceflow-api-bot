@@ -1,32 +1,25 @@
 /* eslint-disable no-await-in-loop */
-import RuntimeClientFactory, { Context as VFContext, TraceType } from '@voiceflow/runtime-client-js';
+import { GeneralTrace, TraceType } from '@voiceflow/general-types';
+import { AxiosResponse } from 'axios';
 import { Context, Telegraf } from 'telegraf';
 
-import kvstore from './store';
+import DialogManagerApi from './dialog-manager-api';
+import DialogManagerBody from './types';
 
 require('dotenv').config();
 
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN!);
 
-const factory = new RuntimeClientFactory({
-  versionID: process.env.VOICEFLOW_VERSION_ID!, // voiceflow project versionID
-  apiKey: process.env.VOICEFLOW_API_KEY!, // voiceflow api key
-  endpoint: process.env.VOICEFLOW_RUNTIME_ENDPOINT,
-});
-
-const response = async (ctx: Context, VFctx: VFContext) => {
-  const senderID = ctx.message!.from.id.toString();
-  await kvstore.set(senderID, VFctx.toJSON().state);
-
+const response = async (ctx: Context, VFctx: AxiosResponse<GeneralTrace[]>) => {
   // eslint-disable-next-line no-restricted-syntax
-  for (const trace of VFctx.getTrace()) {
+  for (const trace of Object.values(VFctx)) {
     if (trace.type === TraceType.SPEAK) {
       await ctx.reply(trace.payload.message);
     }
     if (trace.type === TraceType.VISUAL && trace.payload.visualType === 'image') {
       await ctx.replyWithPhoto(trace.payload.image!);
     }
-    if (trace.type === TraceType.AUDIO) {
+    if (trace.type === TraceType.SPEAK && trace.payload.src !== null) {
       console.log(JSON.stringify(trace.payload));
       await ctx.replyWithAudio(trace.payload.src!);
     }
@@ -34,21 +27,29 @@ const response = async (ctx: Context, VFctx: VFContext) => {
 };
 
 const getClient = async (ctx: Context) => {
-  const senderID = ctx.message!.from.id.toString();
-  const state = await kvstore.get(senderID);
-  return factory.createClient(state);
+  return DialogManagerApi.getInstance(
+    process.env.VOICEFLOW_RUNTIME_ENDPOINT!,
+    process.env.VOICEFLOW_API_KEY!,
+    process.env.VOICEFLOW_VERSION_ID!,
+    ctx.message!.from.id.toString()
+  );
 };
 
 bot.start(async (ctx) => {
   const client = await getClient(ctx);
-  const context = await client.start();
+  const body: DialogManagerBody = {};
+  const context = await client.doInteraction(body);
   await response(ctx, context);
 });
 
 const ANY_WORD_REGEX = new RegExp(/(.+)/i);
 bot.hears(ANY_WORD_REGEX, async (ctx) => {
   const client = await getClient(ctx);
-  const context = await client.sendText(ctx.message.text);
+  const body: DialogManagerBody = {
+    type: 'text',
+    payload: ctx.message.text,
+  };
+  const context = await client.doInteraction(body);
   await response(ctx, context);
 });
 
