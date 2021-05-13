@@ -19,7 +19,7 @@ const response = async (ctx: Context, VFctx: AxiosResponse<GeneralTrace[]>) => {
     if (trace.type === TraceType.VISUAL && trace.payload.visualType === 'image') {
       await ctx.replyWithPhoto(trace.payload.image!);
     }
-    if (trace.type === TraceType.SPEAK && trace.payload.src !== null) {
+    if (trace.type === TraceType.SPEAK && trace.payload.src !== null && trace.payload.src !== undefined) {
       console.log(JSON.stringify(trace.payload));
       await ctx.replyWithAudio(trace.payload.src!);
     }
@@ -37,7 +37,10 @@ const getClient = async (ctx: Context) => {
 
 bot.start(async (ctx) => {
   const client = await getClient(ctx);
-  const body: DialogManagerBody = {};
+  const body: DialogManagerBody = {
+    type: 'launch',
+  };
+  await client.doDeleteStatus();
   const context = await client.doInteraction(body);
   await response(ctx, context);
 });

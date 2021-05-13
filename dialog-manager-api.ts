@@ -44,4 +44,6 @@ export default class DialogManagerApi extends HttpClient {
 
   public doInteraction = (body: DialogManagerBody) =>
     this.instance.post<GeneralTrace[]>(`/state/${this.versionID}/user/${this.userID}/interact`, body);
+
+  public doDeleteStatus = () => this.instance.delete<GeneralTrace[]>(`/state/${this.versionID}/user/${this.userID}`);
 }
