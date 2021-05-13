@@ -13,15 +13,18 @@ const bot = new Telegraf(process.env.TELEGRAM_TOKEN!);
 const response = async (ctx: Context, VFctx: AxiosResponse<GeneralTrace[]>) => {
   // eslint-disable-next-line no-restricted-syntax
   for (const trace of Object.values(VFctx)) {
-    if (trace.type === TraceType.SPEAK) {
-      await ctx.reply(trace.payload.message);
-    }
-    if (trace.type === TraceType.VISUAL && trace.payload.visualType === 'image') {
-      await ctx.replyWithPhoto(trace.payload.image!);
-    }
     if (trace.type === TraceType.SPEAK && trace.payload.src !== null && trace.payload.src !== undefined) {
       console.log(JSON.stringify(trace.payload));
       await ctx.replyWithAudio(trace.payload.src!);
+      continue;
+    }
+    if (trace.type === TraceType.SPEAK) {
+      await ctx.reply(trace.payload.message);
+      continue;
+    }
+    if (trace.type === TraceType.VISUAL && trace.payload.visualType === 'image') {
+      await ctx.replyWithPhoto(trace.payload.image!);
+      continue;
     }
   }
 };
@@ -38,9 +41,10 @@ const getClient = async (ctx: Context) => {
 bot.start(async (ctx) => {
   const client = await getClient(ctx);
   const body: DialogManagerBody = {
-    type: 'launch',
+    request: {
+      type: 'launch',
+    },
   };
-  await client.doDeleteStatus();
   const context = await client.doInteraction(body);
   await response(ctx, context);
 });
@@ -49,8 +53,10 @@ const ANY_WORD_REGEX = new RegExp(/(.+)/i);
 bot.hears(ANY_WORD_REGEX, async (ctx) => {
   const client = await getClient(ctx);
   const body: DialogManagerBody = {
-    type: 'text',
-    payload: ctx.message.text,
+    request: {
+      type: 'text',
+      payload: ctx.message.text,
+    },
   };
   const context = await client.doInteraction(body);
   await response(ctx, context);
